@@ -1,4 +1,5 @@
 import numpy as np
+from datetime import datetime
 from baselines.common.runners import AbstractEnvRunner
 
 class Runner(AbstractEnvRunner):
@@ -26,7 +27,9 @@ class Runner(AbstractEnvRunner):
         for _ in range(self.nsteps):
             # Given observations, get action value and neglopacs
             # We already have self.obs because Runner superclass run self.obs[:] = env.reset() on init
+            print(f'{datetime.now()}:runner.py:Runner.run:Stepping agent...', flush=True)
             actions, values, self.states, neglogpacs = self.model.step(self.obs, S=self.states, M=self.dones)
+            print(f'{datetime.now()}:runner.py:Runner.run:Stepping agent...Done.', flush=True)
             mb_obs.append(self.obs.copy())
             mb_actions.append(actions)
             mb_values.append(values)
@@ -35,7 +38,9 @@ class Runner(AbstractEnvRunner):
 
             # Take actions in env and look the results
             # Infos contains a ton of useful informations
+            print(f'{datetime.now()}:runner.py:Runner.run:Stepping environment...', flush=True)
             self.obs[:], rewards, self.dones, infos = self.env.step(actions)
+            print(f'{datetime.now()}:runner.py:Runner.run:Stepping environment...Done.', flush=True)
             for info in infos:
                 maybeepinfo = info.get('episode')
                 if maybeepinfo: epinfos.append(maybeepinfo)

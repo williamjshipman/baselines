@@ -1,4 +1,5 @@
 import multiprocessing as mp
+from datetime import datetime
 
 import numpy as np
 from .vec_env import VecEnv, CloudpickleWrapper, clear_mpi_env_vars
@@ -15,7 +16,9 @@ def worker(remote, parent_remote, env_fn_wrappers):
     envs = [env_fn_wrapper() for env_fn_wrapper in env_fn_wrappers.x]
     try:
         while True:
+            # print(f'{datetime.now()}:subproc_vec_env.py:worker:Waiting for command...', flush=True)
             cmd, data = remote.recv()
+            # print(f'{datetime.now()}:subproc_vec_env.py:worker:Received command "{cmd}"', flush=True)
             if cmd == 'step':
                 remote.send([step_env(env, action) for env, action in zip(envs, data)])
             elif cmd == 'reset':
@@ -29,11 +32,14 @@ def worker(remote, parent_remote, env_fn_wrappers):
                 remote.send(CloudpickleWrapper((envs[0].observation_space, envs[0].action_space, envs[0].spec)))
             else:
                 raise NotImplementedError
+            # print(f'{datetime.now()}:subproc_vec_env.py:worker:Processed command.', flush=True)
     except KeyboardInterrupt:
-        print('SubprocVecEnv worker: got KeyboardInterrupt')
+        print('SubprocVecEnv worker: got KeyboardInterrupt', flush=True)
+        raise
     finally:
         for env in envs:
             env.close()
+    # print(f'{datetime.now()}:subproc_vec_env.py:worker:Exiting.', flush=True)
 
 
 class SubprocVecEnv(VecEnv):
